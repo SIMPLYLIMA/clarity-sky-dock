@@ -4,6 +4,10 @@ authors = []
 description = ""
 telemetry = false
 requirements = []
+[contracts.badges]
+path = "contracts/badges.clar"
+depends_on = []
+
 [contracts.rewards]
 path = "contracts/rewards.clar"
 depends_on = []
