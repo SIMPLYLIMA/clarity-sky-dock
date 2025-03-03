@@ -15,7 +15,6 @@ Clarinet.test({
     
     assertEquals(block.receipts[0].result, "(ok u1)");
     
-    // Verify vault data
     let vault = chain.callReadOnlyFn(
       "vault",
       "get-vault",
@@ -40,7 +39,6 @@ Clarinet.test({
     const wallet_1 = accounts.get("wallet_1")!;
     const wallet_2 = accounts.get("wallet_2")!;
     
-    // Create vault
     let block = chain.mineBlock([
       Tx.contractCall("vault", "create-vault", 
         [types.ascii("My Vault")], 
@@ -48,7 +46,6 @@ Clarinet.test({
       )
     ]);
     
-    // Try to update with different wallet
     block = chain.mineBlock([
       Tx.contractCall("vault", "update-vault-stats",
         [types.uint(1), types.uint(100), types.uint(10)],
@@ -57,5 +54,35 @@ Clarinet.test({
     ]);
     
     assertEquals(block.receipts[0].result, "(err u403)");
+  },
+});
+
+Clarinet.test({
+  name: "Handles zero files correctly",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const wallet_1 = accounts.get("wallet_1")!;
+    
+    let block = chain.mineBlock([
+      Tx.contractCall("vault", "create-vault", 
+        [types.ascii("My Vault")], 
+        wallet_1.address
+      )
+    ]);
+    
+    block = chain.mineBlock([
+      Tx.contractCall("vault", "update-vault-stats",
+        [types.uint(1), types.uint(100), types.uint(0)],
+        wallet_1.address
+      )
+    ]);
+    
+    let vault = chain.callReadOnlyFn(
+      "vault",
+      "get-vault",
+      [types.uint(1)],
+      wallet_1.address
+    );
+    
+    assertEquals(vault.result.expectSome().expectTuple().score, "u0");
   },
 });
