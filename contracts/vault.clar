@@ -13,6 +13,10 @@
   }
 )
 
+(define-constant ERR-NOT-FOUND u404)
+(define-constant ERR-UNAUTHORIZED u403)
+(define-constant ERR-INVALID-INPUT u400)
+
 (define-public (create-vault (name (string-ascii 64)))
   (let ((vault-id (+ (var-get last-vault-id) u1)))
     (var-set last-vault-id vault-id)
@@ -34,8 +38,9 @@
   (vault-id uint) 
   (new-size uint)
   (new-files uint))
-  (let ((vault (unwrap! (get-vault vault-id) (err u404))))
-    (asserts! (is-eq tx-sender (get owner vault)) (err u403))
+  (let ((vault (unwrap! (get-vault vault-id) (err ERR-NOT-FOUND))))
+    (asserts! (is-eq tx-sender (get owner vault)) (err ERR-UNAUTHORIZED))
+    (asserts! (>= new-size u0) (err ERR-INVALID-INPUT))
     (ok (map-set vaults
       { vault-id: vault-id }
       {
@@ -54,7 +59,7 @@
 )
 
 (define-private (calculate-score (size uint) (files uint))
-  (if (is-eq files u0)
+  (if (or (is-eq files u0) (is-eq size u0))
     u0
     (/ (* size u100) files))
 )
